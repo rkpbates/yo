@@ -37,7 +37,7 @@ class ScanTube
                     if (lineValues1[5] != lineValues2[5])
                         //Specifically comparing Barcode columns between the .csv files
                     {
-                        Console.WriteLine("Does not match");
+                        Console.WriteLine("Does not match {0}, {1}" column06, column13);
                     }
                     else
                     {
