@@ -1,0 +1,38 @@
+class ScanTube
+{
+    public static void Main(string[] args)
+    {
+        try
+        {
+            using (StreamReader sr1 = new StreamReader(@"C:\Users\batesr4\Desktop\Index\Tube Transfer Files\scan1.csv"))
+            using (StreamReader sr2 = new StreamReader(@"C:\Users\batesr4\Desktop\Index\Tube Transfer Files\scan2.csv"))
+            {
+                string line;
+                string line2;
+                string retry = @"C:\Users\batesr4\Desktop\Index\Tube Transfer Files\retry.txt";
+
+                while ((line = sr1.ReadLine()) != null && (line2 = sr2.ReadLine()) != null)
+                {
+                    if (line == line2)
+                    {
+                        using (StreamWriter sw = new StreamWriter(retry))
+                        {
+                            sw.WriteLine("0");
+                        }
+                    }
+                    else
+                    {
+                        using (StreamWriter sw2 = new StreamWriter(retry))
+                        {
+                            sw2.WriteLine("1");
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+
+        }
+    }
+}
