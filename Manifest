@@ -1,0 +1,65 @@
+Dim objFile, RunID, objFS
+Dim objFS2, objFile2
+Dim WorkListExportDir, FileDir
+Dim strText, splitStr, Sample, arrText, strVariable
+Dim colNum, cellCounter
+
+' Pathways will need to change
+
+' This was used for COVID file creation.
+' Creating a plate map for LCWS to use
+
+Set objFS2 = CreateObject("Scripting.FileSystemObject")
+
+Set objFile = objFS2.OpenTextFile("C:\Users\shackea\Desktop\COVID_Install\AutoRoMa.csv")
+
+    objFile.Readline
+
+               RunID = objFile.Readline
+
+MsgBox RunID & " "
+
+WorkListExportDir = "C:\Users\shackea\Desktop\COVID_Install\Covid Temp Files\Covid Files\COVID Runs\_ArchiveRuns\" & RunID & "\"
+FileDir = "BU_TecanScanFile_" & RunID & ".csv"
+
+MsgBox WorkListExportDir & ""
+MsgBox FileDir & " "
+
+               If (objFS2.FileExists(WorkListExportDir & FileDir)) Then
+                              MsgBox "File Found" & " - " & FileDir
+                              ' Open Aliquot file
+                              'Set objFile = objFS.OpenTextFile(aliquotBarcodeExportDir & strFile)
+               Else
+
+               MsgBox "File not Found"
+
+               End If
+
+Set objFile2 = objFS2.OpenTextFile("C:\Users\shackea\Desktop\scan.csv")
+
+               objFile2.Readline
+
+               Do Until objFile2.AtEndOfStream
+
+                              strText = objFile2.Readline
+                              splitStr = Split(strText, ";")
+                              Sample = splitStr(6)
+
+                              colNum = 1
+                              cellCounter = 0
+                              maxItems = UBound(arrText) - 1
+
+                              Do While colNum < maxItems
+
+                                             Sheets("Sheet1").Cell(rowNum,colNum).Value = arrText(cellCounter)
+                                             cellCounter = cellCounter + 1
+                                             colNum = colNum +1
+
+                              Loop
+
+                              rowNum = rowNum +1
+                              Exit Do
+
+               Loop
+
+               objFile2.Close
