@@ -1,0 +1,574 @@
+using Microsoft.Office.Interop.Excel;
+using System.Runtime.InteropServices;
+using Application = Microsoft.Office.Interop.Excel.Application;
+using Excel = Microsoft.Office.Interop.Excel;
+using File = System.IO.File;
+
+
+
+class GSKMonthly
+{
+    static void Main()
+    {
+        //Compiles all .csvs in source folder into one file
+        Compiler();
+        //Takes data from Allele1 and Allele2 and inserts into Alleles
+        Interpret();
+        //Edits Headers and formats certain cells
+        FormatExcel();
+        //Replaces specific strings with blanks
+        Replace();
+        //Inserts string data into specific columns and removes blank rows
+        Insert();
+        //Formats .xslx as .csv and changes name to "GSKQ2MonthlyCumulative"
+        SaveAsCSV();
+        //Cleans up temp files and moves used files to Monthly Archive
+        MoveFiles();
+    }
+    public static void Compiler()
+    {
+        try
+        {
+            //Testing Pathway
+            string sourceFolder = @"C:\Users\batesr4\Documents\Projects\C# Testing\Results Files CSVs\";
+            string destinationFile = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv";
+
+            //Production Pathway
+            //string sourceFolder = @"C:\";
+            //string destinationFile = @"C:\";
+
+            string[] filePaths = Directory.GetFiles(sourceFolder, "*.csv");
+            StreamWriter fileDest = new StreamWriter(destinationFile);
+
+            int i;
+            for (i = 0; i < filePaths.Length; i++)
+            {
+                string file = filePaths[i];
+
+                string[] lines = File.ReadAllLines(file);
+
+                if (i > 0)
+                {
+                    lines = lines.Skip(1).ToArray(); // Skip header row for all but first file
+                }
+
+                foreach (string line in lines)
+                {
+                    fileDest.WriteLine(line);
+                }
+
+            }
+            fileDest.Close();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Compiler has failed.", ex.ToString());
+        }
+    }
+    public static void Interpret()
+    {
+        Application app = new Application();
+        Workbook wb = null;
+        Worksheet ws;
+        app.DisplayAlerts = false;
+
+        try
+        {
+            //Testing Pathway
+            if (File.Exists(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv"))
+
+            //Production Pathway
+            //if (File.Exists(@"C:\"))
+            {
+                //Testing Pathway
+                wb = app.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv",
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing);
+
+                //Production Pathway
+                /*wb = app.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv",
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing);*/
+
+                ws = wb.Worksheets["CSV_Files_Combined"];
+                //edit worksheet name for production
+                //ws = wb.Worksheets[""]
+                app.Visible = false;
+
+                //Column deletions
+                Excel.Range shiftUp = ws.get_Range("P1", "AD1");
+                shiftUp.Cells.Delete();
+                //Testing Pathway
+                wb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv");
+
+                //Production Pathway
+                //wb.SaveAs(@"C:\"
+                wb.Close();
+                app.Quit();
+
+                if (wb != null)
+                {
+                    Marshal.FinalReleaseComObject(wb);
+                    wb = null;
+                }
+                if (ws != null)
+                {
+                    Marshal.FinalReleaseComObject(ws);
+                    ws = null;
+                }
+                if (app != null)
+                {
+                    Marshal.FinalReleaseComObject(app);
+                    app = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Interpret (Format part) has failed.", ex.ToString());
+        }
+        //Testing Pathway
+        string path = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv";
+        //Production Pathway
+        //string path = @"C:\"
+        try
+        {
+            string text = File.ReadAllText(path);
+            using (StreamReader sr = new StreamReader(path))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] lineValues = line.Split(new char[] { ',' });
+                    string Specimen = lineValues[12];
+                    string Allele1 = lineValues[21];
+                    string Allele2 = lineValues[22];
+                    string Alleles = lineValues[23];
+                    string appendAlleles = "[" + Allele2 +"/" + Allele1 +"]";
+                    Console.WriteLine(appendAlleles);
+                    if (lineValues[23] != "Alleles")
+                    {
+                            text = text.Replace(Alleles, appendAlleles);
+                    }
+                }
+            }
+            File.WriteAllText(path, text);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Interpret (.csv part) has failed.", e.ToString());
+        }
+    }
+    public static void FormatExcel()
+    {
+        Application app = new Application();
+        Workbook wb = null;
+        Worksheet ws;
+        app.DisplayAlerts = false;
+
+        try
+        {
+            //Testing Pathway
+            if (File.Exists(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv"))
+
+            //Production Pathway
+            //if (File.Exists(@"C:\"))
+            {
+                //Testing Pathway
+                wb = app.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv",
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing);
+
+                //Production Pathway
+                /*wb = app.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv",
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing);*/
+
+                ws = wb.Worksheets["CSV_Files_Combined"];
+                //edit worksheet name for production
+                //ws = wb.Worksheets[""]
+                app.Visible = false;
+
+                //Column deletions
+                //Excel.Range shiftUp = ws.get_Range("P1", "AD1");
+                //shiftUp.Cells.Delete();
+                Excel.Range headerDelete7 = ws.get_Range("AA1", "AC1");
+                headerDelete7.EntireColumn.Delete();
+                Excel.Range headerDelete6 = ws.get_Range("V1", "W1");
+                headerDelete6.EntireColumn.Delete();
+                Excel.Range headerDelete5 = ws.get_Range("N1", "O1");
+                headerDelete5.EntireColumn.Delete();
+                Excel.Range headerDelete4 = ws.get_Range("L1");
+                headerDelete4.EntireColumn.Delete();
+                Excel.Range headerDelete3 = ws.get_Range("H1");
+                headerDelete3.EntireColumn.Delete();
+                Excel.Range headerDelete2 = ws.get_Range("F1");
+                headerDelete2.EntireColumn.Delete();
+                Excel.Range headerDelete1 = ws.get_Range("B1", "D1");
+                headerDelete1.EntireColumn.Delete();
+                //Column insertions
+                Excel.Range insert = ws.Range["N1"];
+                insert.EntireColumn.Insert(Excel.XlInsertShiftDirection.xlShiftToRight,
+                        Excel.XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+                insert = ws.Range["N1"];
+                //insert.Value2 = "PFTESTCD";
+                Excel.Range insert1 = ws.Range["H1"];
+                insert1.EntireColumn.Insert(Excel.XlInsertShiftDirection.xlShiftToRight,
+                        Excel.XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+                Excel.Range insert2 = ws.Range["S1"];
+                insert2.EntireColumn.Insert(Excel.XlInsertShiftDirection.xlShiftToRight,
+                        Excel.XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+                insert2.EntireColumn.Insert(Excel.XlInsertShiftDirection.xlShiftToRight,
+                        Excel.XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+                insert2.EntireColumn.Insert(Excel.XlInsertShiftDirection.xlShiftToRight,
+                        Excel.XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+                insert2.EntireColumn.Insert(Excel.XlInsertShiftDirection.xlShiftToRight,
+                        Excel.XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+                ws.Cells[1, 18].EntireColumn.ClearContents();
+                //Renaming Headers
+                Excel.Range header1 = ws.Range["A1"];
+                Excel.Range header2 = ws.Range["B1"];
+                Excel.Range header3 = ws.Range["C1"];
+                Excel.Range header4 = ws.Range["D1"];
+                Excel.Range header5 = ws.Range["E1"];
+                Excel.Range header6 = ws.Range["F1"];
+                Excel.Range header7 = ws.Range["G1"];
+                Excel.Range header8 = ws.Range["H1"];
+                Excel.Range header9 = ws.Range["I1"];
+                Excel.Range header10 = ws.Range["J1"];
+                Excel.Range header11 = ws.Range["K1"];
+                Excel.Range header12 = ws.Range["L1"];
+                Excel.Range header13 = ws.Range["M1"];
+                Excel.Range header14 = ws.Range["N1"];
+                Excel.Range header15 = ws.Range["P1"];
+                Excel.Range header16 = ws.Range["Q1"];
+                Excel.Range header17 = ws.Range["R1"];
+                Excel.Range header18 = ws.Range["S1"];
+                Excel.Range header19 = ws.Range["T1"];
+                Excel.Range header20 = ws.Range["U1"];
+                Excel.Range header21 = ws.Range["V1"];
+                Excel.Range header22 = ws.Range["W1"];
+                //edit
+                Excel.Range header23 = ws.Range["O1"];
+
+                header1.Value2 = "STUDYID";
+                header2.Value2 = "SUBJID";
+                header3.Value2 = "VISIT";
+                header4.Value2 = "PFDAT";
+                header5.Value2 = "PFTIM";
+                header6.Value2 = "PFCOM";
+                header7.Value2 = "CSPECTYP";
+                header8.Value2 = "PFSPEC";
+                header9.Value2 = "PFRUNID";
+                header10.Value2 = "PFRSNUM";
+                header11.Value2 = "PFREFID";
+                header12.Value2 = "PFCHROM";
+                header13.Value2 = "PFGENLOC";
+                header14.Value2 = "GCSCR";
+                header15.Value2 = "PFORRES";
+                header16.Value2 = "PFGENRI";
+                header17.Value2 = "PFCAT";
+                header18.Value2 = "PFSTAT";
+                header19.Value2 = "PFREASND";
+                header20.Value2 = "PFNAM";
+                header21.Value2 = "PFMETHOD";
+                header22.Value2 = "THETA";
+                header23.Value2 = "PFTESTCD";
+
+                //Testing Pathway
+                wb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv");
+
+                //Production Pathway
+                //wb.SaveAs(@"C:\"
+
+                wb.Close();
+                app.Quit();
+
+                if (wb != null)
+                {
+                    Marshal.FinalReleaseComObject(wb);
+                    wb = null;
+                }
+                if (ws != null)
+                {
+                    Marshal.FinalReleaseComObject(ws);
+                    ws = null;
+                }
+                if (app != null)
+                {
+                    Marshal.FinalReleaseComObject(app);
+                    app = null;
+                }
+            }
+            //Testing Pathway
+            string path = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
+            //Production Pathway
+            //string path = @"C:\"
+            try
+            {
+                string text = File.ReadAllText(path);
+                using (StreamReader sr = new StreamReader(path))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        string[] lineValues = line.Split(new char[] { ',' });
+                        string Specimen = lineValues[6];
+                        string PFSPEC = lineValues[7];
+                        if (Specimen == "Whole Blood")
+                        {
+                            text = text.Replace(PFSPEC, "Data");
+                        }
+                    }
+                }
+                File.WriteAllText(path, text);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Format Excel (insert DNA string) has failed.", e.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            if (wb != null) wb.Close(true);
+            Console.WriteLine("FormatExcel has failed.", ex.ToString());
+        }
+    }
+    public static void Replace()
+    {
+        try
+        {
+
+            //Testing Pathway
+            string path = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
+
+            //Production Pathway
+            //string path = @"C:\"
+
+            string text = File.ReadAllText(path);
+
+            string _text = text.Replace("SNP Name", "").Replace("rs ID", "").Replace("Sample ID", "").Replace("Chr", "").Replace("Position", "").Replace("GC Score", "").Replace("Alleles", "")
+                .Replace("Gene(s)", "").Replace("Mutation(s)", "").Replace("Theta", "");
+
+            File.WriteAllText(path, _text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Replace failed.", ex.ToString());
+        }
+    }
+    public static void Insert()
+    {
+        try
+        {
+            Application saveApp = new Application();
+            Workbook saveWb = null;
+            Worksheet saveWs;
+            saveApp.DisplayAlerts = false;
+
+            //Testing Pathway
+            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv",
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing);
+
+            //Production Pathway
+            /*saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv",
+            Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing);*/
+
+            saveWs = saveWb.Worksheets["CSV_Files_Combined2"];
+            //edit worksheet name for production
+            //saveWs = saveWb.Worksheets["CSV_Files_Combined2"];
+
+            saveApp.Visible = false;
+
+            //Removes blank spaces
+            var LastRow = saveWs.UsedRange.Rows.Count;
+            LastRow = LastRow + saveWs.UsedRange.Row - 1;
+            for (int j = 1; j <= LastRow; j++)
+            {
+                if (saveApp.WorksheetFunction.CountA(saveWs.Rows[j]) == 0)
+                    (saveWs.Rows[j] as Microsoft.Office.Interop.Excel.Range).Delete();
+            }
+
+            //Inserts String values into column, needs editing to not go past last filled row**
+            //saveWs.Cells[1, 8].EntireColumn.Replace("", "DNA");
+            saveWs.Cells[1, 15].EntireColumn.Replace("", "SNVAR");
+            saveWs.Cells[1, 18].EntireColumn.Replace("", "Genetic Variation");
+            saveWs.Cells[1, 21].EntireColumn.Replace("", "LABCORP, 1440 York Ct. Burlington NC 27215");
+            saveWs.Cells[1, 22].EntireColumn.Replace("", "DNA Microarray");
+
+
+            //Deletes last two rows in U and V with excess inserted data
+            var LastRowDel = saveWs.UsedRange.Row + saveWs.UsedRange.Rows.Count - 1;
+            saveWs.Rows[LastRowDel].Delete();
+            saveWs.Rows[LastRowDel - 1].Delete();
+
+            //Autofits
+            Excel.Range used = saveWs.UsedRange;
+            used.EntireColumn.AutoFit();
+
+            //Testing Pathway
+            saveWb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
+                           XlFileFormat.xlOpenXMLWorkbook, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                           XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+
+            //Production Pathway
+            /*saveWb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
+                           XlFileFormat.xlOpenXMLWorkbook, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                           XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);*/
+
+            saveWb.Close();
+            saveApp.Quit();
+            if (saveWb != null)
+            {
+                Marshal.FinalReleaseComObject(saveWb);
+                saveWb = null;
+            }
+            if (saveWs != null)
+            {
+                Marshal.FinalReleaseComObject(saveWs);
+                saveWs = null;
+            }
+            if (saveApp != null)
+            {
+                Marshal.FinalReleaseComObject(saveApp);
+                saveApp = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Insert has failed.", ex.ToString());
+        }
+    }
+    public static void SaveAsCSV()
+    {
+        try
+        {
+            Application saveApp = new Application();
+            Workbook saveWb = null;
+            Worksheet saveWs;
+            saveApp.DisplayAlerts = false;
+
+            //Testing Pathway
+            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing);
+
+            /*Production Pathway
+            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing);*/
+
+            saveWs = saveWb.Worksheets["CSV_Files_Combined2"];
+            //edit worksheet name for production
+            //saveWs = saveWb.Worksheets[""];
+            saveApp.Visible = false;
+
+            //Testing Pathway
+            saveWb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\GSKQ2MonthlyCumulative.csv", XlFileFormat.xlCSV);
+            //Production Pathway
+            //saveWb.SaveAs(@"C:", XlFileFormat.xlCSV);
+            saveWb.Close();
+            saveApp.Quit();
+            if (saveWb != null)
+            {
+                Marshal.FinalReleaseComObject(saveWb);
+                saveWb = null;
+            }
+            if (saveWs != null)
+            {
+                Marshal.FinalReleaseComObject(saveWs);
+                saveWs = null;
+            }
+            if (saveApp != null)
+            {
+                Marshal.FinalReleaseComObject(saveApp);
+                saveApp = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("SaveAsCSV has failed.", ex.ToString());
+        }
+    }
+    public static void MoveFiles()
+    {
+        //Testing Pathway
+        string fileToDelete = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv";
+        string fileToDelete1 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
+        string fileToDelete2 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx";
+        string fileToMove = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\GSKQ2MonthlyCumulative.csv";
+        string moveDest = @"C:\Users\batesr4\Documents\Projects\C# Testing\GSKQ2MonthlyCumulative Reports\GSKQ2MonthlyCumulative.csv";
+        string directoryToArchive = @"C:\Users\batesr4\Documents\Projects\C# Testing\Results Files CSVs\";
+        string moveArchive = @"C:\Users\batesr4\Documents\Projects\C# Testing\Results Files CSVs\Monthly Archive\";
+
+        //Production Pathway
+        /*string fileToDelete = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv";
+        string fileToDelete1 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
+        string fileToDelete2 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx";
+        string fileToMove = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\GSKQ2MonthlyCumulative.csv";
+        string moveDest = @"C:\Users\batesr4\Documents\Projects\C# Testing\GSKQ2MonthlyCumulative Reports\GSKQ2MonthlyCumulative.csv";
+        string directoryToArchive = @"C:\Users\batesr4\Documents\Projects\C# Testing\Results Files CSVs\";
+        string moveArchive = @"C:\Users\batesr4\Documents\Projects\C# Testing\Results Files CSVs\Monthly Archive\";*/
+
+        try
+        {
+            if (File.Exists(fileToDelete))
+            {
+                File.Delete(fileToDelete);
+            }
+            if (File.Exists(fileToDelete1))
+            {
+                File.Delete(fileToDelete1);
+            }
+            if (File.Exists(fileToDelete2))
+            {
+                File.Delete(fileToDelete2);
+            }
+            //Moving final report
+            if (File.Exists(moveDest))
+            {
+                File.Delete(moveDest);
+            }
+            if (File.Exists(fileToMove))
+            {
+                File.Move(fileToMove, moveDest);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("MoveFiles has failed.", e.ToString());
+        }
+        try
+        {
+            //Move all files used to compile this month's report
+            var allFiles = Directory.GetFiles(directoryToArchive, "*.csv");
+            foreach (var file in allFiles)
+            {
+                var destFileName = moveArchive + Path.GetFileNameWithoutExtension(file) + Path.GetExtension(file);
+                File.Move(file, destFileName);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("MoveFiles (Archive .csvs section) has failed.  Check if duplicate file already exists in Archive folder.", ex.ToString());
+        }
+    }
+}
