@@ -138,6 +138,7 @@ class GSKMonthly
         try
         {
             string text = File.ReadAllText(path);
+            string text1 = null;
             using (StreamReader sr = new StreamReader(path))
             {
                 string line;
@@ -152,11 +153,11 @@ class GSKMonthly
                     Console.WriteLine(appendAlleles);
                     if (lineValues[23] != "Alleles")
                     {
-                            text = text.Replace(Alleles, appendAlleles);
+                            text1 = text.Replace(Alleles, appendAlleles);
                     }
                 }
             }
-            File.WriteAllText(path, text);
+            File.WriteAllText(path, text1);
         }
         catch (Exception e)
         {
