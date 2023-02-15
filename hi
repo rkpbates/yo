@@ -16,7 +16,7 @@ class GSKMonthly
         Interpret();
         //Edits Headers and formats certain cells
         FormatExcel();
-        //Replaces specific strings with blanks
+        //Replaces specific strings with blanks to be removed
         Replace();
         //Inserts string data into specific columns and removes blank rows
         Insert();
@@ -138,26 +138,29 @@ class GSKMonthly
         try
         {
             string text = File.ReadAllText(path);
-            string text1 = null;
+            List<string> newLines = new List<string>();
             using (StreamReader sr = new StreamReader(path))
             {
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
                     string[] lineValues = line.Split(new char[] { ',' });
-                    string Specimen = lineValues[12];
                     string Allele1 = lineValues[21];
                     string Allele2 = lineValues[22];
                     string Alleles = lineValues[23];
-                    string appendAlleles = "[" + Allele2 +"/" + Allele1 +"]";
-                    Console.WriteLine(appendAlleles);
+                    string appendAlleles = "[" + Allele1 +"/" + Allele2 +"]";
                     if (lineValues[23] != "Alleles")
                     {
-                            text1 = text.Replace(Alleles, appendAlleles);
+                        string newLine = line.Replace(Alleles, appendAlleles);
+                        newLines.Add(newLine);       
+                    }
+                    else
+                    {
+                        newLines.Add(line);
                     }
                 }
             }
-            File.WriteAllText(path, text1);
+            File.WriteAllLines(path, newLines.ToArray());
         }
         catch (Exception e)
         {
@@ -285,7 +288,7 @@ class GSKMonthly
                 header23.Value2 = "PFTESTCD";
 
                 //Testing Pathway
-                wb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv");
+                wb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv");
 
                 //Production Pathway
                 //wb.SaveAs(@"C:\"
@@ -309,33 +312,6 @@ class GSKMonthly
                     app = null;
                 }
             }
-            //Testing Pathway
-            string path = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
-            //Production Pathway
-            //string path = @"C:\"
-            try
-            {
-                string text = File.ReadAllText(path);
-                using (StreamReader sr = new StreamReader(path))
-                {
-                    string line;
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        string[] lineValues = line.Split(new char[] { ',' });
-                        string Specimen = lineValues[6];
-                        string PFSPEC = lineValues[7];
-                        if (Specimen == "Whole Blood")
-                        {
-                            text = text.Replace(PFSPEC, "Data");
-                        }
-                    }
-                }
-                File.WriteAllText(path, text);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Format Excel (insert DNA string) has failed.", e.ToString());
-            }
         }
         catch (Exception ex)
         {
@@ -347,19 +323,18 @@ class GSKMonthly
     {
         try
         {
-
             //Testing Pathway
-            string path = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
+            string path1 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv";
 
             //Production Pathway
             //string path = @"C:\"
 
-            string text = File.ReadAllText(path);
+            string text = File.ReadAllText(path1);
 
             string _text = text.Replace("SNP Name", "").Replace("rs ID", "").Replace("Sample ID", "").Replace("Chr", "").Replace("Position", "").Replace("GC Score", "").Replace("Alleles", "")
-                .Replace("Gene(s)", "").Replace("Mutation(s)", "").Replace("Theta", "");
+                .Replace("Gene(s)", "").Replace("Mutation(s)", "").Replace("Theta", "").Replace("[I/D]", "[TA/T]").Replace("[D/D]", "[T/T]").Replace("[I/I]", "[TA/TA]").Replace("[D/I]", "[T/TA]");
 
-            File.WriteAllText(path, _text);
+            File.WriteAllText(path1, _text);
         }
         catch (Exception ex)
         {
@@ -376,7 +351,7 @@ class GSKMonthly
             saveApp.DisplayAlerts = false;
 
             //Testing Pathway
-            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv",
+            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv",
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
@@ -389,48 +364,58 @@ class GSKMonthly
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing);*/
 
-            saveWs = saveWb.Worksheets["CSV_Files_Combined2"];
+            saveWs = saveWb.Worksheets["CSV_Files_Combined"];
             //edit worksheet name for production
             //saveWs = saveWb.Worksheets["CSV_Files_Combined2"];
 
             saveApp.Visible = false;
 
-            //Removes blank spaces
+            //Removes blank rows
             var LastRow = saveWs.UsedRange.Rows.Count;
             LastRow = LastRow + saveWs.UsedRange.Row - 1;
             for (int j = 1; j <= LastRow; j++)
             {
                 if (saveApp.WorksheetFunction.CountA(saveWs.Rows[j]) == 0)
+                {
                     (saveWs.Rows[j] as Microsoft.Office.Interop.Excel.Range).Delete();
+                }
             }
 
-            //Inserts String values into column, needs editing to not go past last filled row**
-            //saveWs.Cells[1, 8].EntireColumn.Replace("", "DNA");
+            //Inserts String values into column
             saveWs.Cells[1, 15].EntireColumn.Replace("", "SNVAR");
             saveWs.Cells[1, 18].EntireColumn.Replace("", "Genetic Variation");
             saveWs.Cells[1, 21].EntireColumn.Replace("", "LABCORP, 1440 York Ct. Burlington NC 27215");
             saveWs.Cells[1, 22].EntireColumn.Replace("", "DNA Microarray");
 
-
-            //Deletes last two rows in U and V with excess inserted data
-            var LastRowDel = saveWs.UsedRange.Row + saveWs.UsedRange.Rows.Count - 1;
-            saveWs.Rows[LastRowDel].Delete();
-            saveWs.Rows[LastRowDel - 1].Delete();
+            //Deletes excess inserted data in formatted cells caused by deleting blank rows
+            for (int j = 1; j <= LastRow; j++)
+            {
+                var LastRowDel = saveWs.UsedRange.Row + saveWs.UsedRange.Rows.Count - 1;
+                if (saveApp.WorksheetFunction.CountA(saveWs.Cells[LastRowDel, 16]) == 0) // && saveApp.WorksheetFunction.CountA(saveWs.Cells[LastRowDel, 15]) == 1)
+                {
+                    saveWs.Rows[LastRowDel].Delete();
+                }
+            }
+            for (int j = 1; j <= LastRow; j++)
+            {
+                if (j>1 && saveApp.WorksheetFunction.CountA(saveWs.Cells[j, 7]) == 1)
+                {
+                    saveWs.Cells[j, 8].Value = "DNA";
+                }
+            }
 
             //Autofits
             Excel.Range used = saveWs.UsedRange;
             used.EntireColumn.AutoFit();
 
             //Testing Pathway
-            saveWb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
+            saveWb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.xlsx",
                            XlFileFormat.xlOpenXMLWorkbook, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                            XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
-
             //Production Pathway
             /*saveWb.SaveAs(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
                            XlFileFormat.xlOpenXMLWorkbook, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                            XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);*/
-
             saveWb.Close();
             saveApp.Quit();
             if (saveWb != null)
@@ -464,7 +449,7 @@ class GSKMonthly
             saveApp.DisplayAlerts = false;
 
             //Testing Pathway
-            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx",
+            saveWb = saveApp.Workbooks.Open(@"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.xlsx",
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
@@ -477,7 +462,7 @@ class GSKMonthly
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing);*/
 
-            saveWs = saveWb.Worksheets["CSV_Files_Combined2"];
+            saveWs = saveWb.Worksheets["CSV_Files_Combined"];
             //edit worksheet name for production
             //saveWs = saveWb.Worksheets[""];
             saveApp.Visible = false;
@@ -513,8 +498,7 @@ class GSKMonthly
     {
         //Testing Pathway
         string fileToDelete = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.csv";
-        string fileToDelete1 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.csv";
-        string fileToDelete2 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined2.xlsx";
+        string fileToDelete2 = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\CSV_Files_Combined.xlsx";
         string fileToMove = @"C:\Users\batesr4\Documents\Projects\C# Testing\Temp\GSKQ2MonthlyCumulative.csv";
         string moveDest = @"C:\Users\batesr4\Documents\Projects\C# Testing\GSKQ2MonthlyCumulative Reports\GSKQ2MonthlyCumulative.csv";
         string directoryToArchive = @"C:\Users\batesr4\Documents\Projects\C# Testing\Results Files CSVs\";
@@ -534,10 +518,6 @@ class GSKMonthly
             if (File.Exists(fileToDelete))
             {
                 File.Delete(fileToDelete);
-            }
-            if (File.Exists(fileToDelete1))
-            {
-                File.Delete(fileToDelete1);
             }
             if (File.Exists(fileToDelete2))
             {
